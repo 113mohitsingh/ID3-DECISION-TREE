@@ -1,94 +1,41 @@
+import streamlit as st
 import pandas as pd
-import numpy as np
-import math
 
-# Create dataset
-data = pd.DataFrame({
-    'Outlook': ['Sunny', 'Sunny', 'Overcast', 'Rain', 'Rain', 'Rain',
-                'Overcast', 'Sunny', 'Sunny', 'Rain', 'Sunny', 'Overcast',
-                'Overcast', 'Rain'],
-    
-    'Humidity': ['High', 'High', 'High', 'High', 'Normal', 'Normal',
-                 'Normal', 'High', 'Normal', 'High', 'Normal', 'High',
-                 'Normal', 'High'],
-    
-    'PlayTennis': ['No', 'No', 'Yes', 'Yes', 'Yes', 'No',
-                   'Yes', 'No', 'Yes', 'Yes', 'Yes', 'Yes',
-                   'Yes', 'No']
-})
+st.title("Play Tennis - Decision Tree")
 
-# Entropy function
-def entropy(col):
-    values, counts = np.unique(col, return_counts=True)
-    ent = 0
-    for count in counts:
-        p = count / len(col)
-        ent -= p * math.log2(p)
-    return ent
+# Dataset
+data = {
+    "Outlook": ["Sunny", "Sunny", "Overcast", "Rain", "Rain",
+                "Rain", "Overcast", "Sunny", "Sunny", "Rain"],
+    "Humidity": ["High", "High", "High", "High", "Normal",
+                 "Normal", "Normal", "High", "Normal", "High"],
+    "PlayTennis": ["No", "No", "Yes", "Yes", "Yes",
+                   "No", "Yes", "No", "Yes", "Yes"]
+}
 
-# Information Gain
-def information_gain(df, attribute, target):
-    total_entropy = entropy(df[target])
-    values, counts = np.unique(df[attribute], return_counts=True)
-    
-    weighted_entropy = 0
-    for i in range(len(values)):
-        subset = df[df[attribute] == values[i]]
-        weighted_entropy += (counts[i] / len(df)) * entropy(subset[target])
-    
-    return total_entropy - weighted_entropy
+df = pd.DataFrame(data)
 
-# ID3 Algorithm
-def id3(df, target, attributes):
-    
-    # If all target values are same
-    if len(np.unique(df[target])) == 1:
-        return df[target].iloc[0]
-    
-    # If no attributes left
-    if len(attributes) == 0:
-        return df[target].mode()[0]
-    
-    # Calculate gains
-    gains = [information_gain(df, attr, target) for attr in attributes]
-    best_attr = attributes[np.argmax(gains)]
-    
-    tree = {best_attr: {}}
-    
-    for value in np.unique(df[best_attr]):
-        subset = df[df[best_attr] == value]
-        remaining_attrs = [attr for attr in attributes if attr != best_attr]
-        tree[best_attr][value] = id3(subset, target, remaining_attrs)
-    
-    return tree
+st.subheader("Dataset")
+st.write(df)
 
-# Build tree
-attributes = list(data.columns)
-attributes.remove('PlayTennis')
+st.subheader("Predict PlayTennis")
 
-decision_tree = id3(data, 'PlayTennis', attributes)
+outlook = st.selectbox("Select Outlook", ["Sunny", "Overcast", "Rain"])
+humidity = st.selectbox("Select Humidity", ["High", "Normal"])
 
-print("Decision Tree:")
-print(decision_tree)
+if st.button("Check Result"):
 
-# Prediction function
-def predict(tree, sample):
-    if not isinstance(tree, dict):
-        return tree
-    
-    attr = next(iter(tree))
-    value = sample[attr]
-    
-    if value in tree[attr]:
-        return predict(tree[attr][value], sample)
+    # Simple Decision Tree Logic
+    if outlook == "Overcast":
+        result = "Yes"
+    elif outlook == "Rain" and humidity == "High":
+        result = "Yes"
+    elif outlook == "Rain" and humidity == "Normal":
+        result = "No"
+    elif outlook == "Sunny" and humidity == "High":
+        result = "No"
     else:
-        return "Unknown"
+        result = "Yes"
 
-# Test sample
-sample = {'Outlook': 'Sunny', 'Humidity': 'High'}
-
-result = predict(decision_tree, sample)
-
-print("\nPrediction for sample:", sample)
-print("PlayTennis:", result)
-
+    st.write("### Prediction Result:")
+    st.write("PlayTennis =", result)
