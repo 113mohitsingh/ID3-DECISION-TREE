@@ -91,3 +91,4 @@ result = predict(decision_tree, sample)
 
 print("\nPrediction for sample:", sample)
 print("PlayTennis:", result)
+
